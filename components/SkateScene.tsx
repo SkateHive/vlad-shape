@@ -34,6 +34,7 @@ export default function SkateScene() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const promptRef = useRef<HTMLDivElement | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
 
   useEffect(() => {
@@ -349,6 +350,7 @@ export default function SkateScene() {
         motion.update(progress, { tilt, pitch, yaw, zoom: zoomActual, reducedMotion: reduced });
         renderer.render(scene, camera);
         setFinished(progress === 1 && targetProgress === 1);
+        if (promptRef.current) promptRef.current.style.opacity = progress < 0.02 ? "1" : "0";
         if (!finished) frame = requestAnimationFrame(animate);
       }
       wake = (force = false) => {
@@ -409,6 +411,11 @@ export default function SkateScene() {
             tabIndex={0}
             aria-label="Interactive 3D skateboard. Scroll to disassemble and reveal the shape. Drag to rotate. Shift + scroll or +/- to zoom. Double click to reset."
           />
+        )}
+        {!failure && (
+          <div ref={promptRef} className="scrollPrompt" aria-hidden="true">
+            <span className="scrollPromptText">Scroll ↓</span>
+          </div>
         )}
       </div>
     </section>

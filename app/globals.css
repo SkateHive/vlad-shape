@@ -1,9 +1,29 @@
+/* Light palette lives on bare :root; dark overrides under the media query —
+   this page has no manual toggle, it always follows the OS/browser setting.
+   Same lime brand hue in both, just shifted lightness so it stays readable
+   on white (a neon #A7FF00 text on white is barely legible). */
 :root {
-  --bg: #0a0a0a;
-  --primary: #a7ff00;
-  --text: #e6e6e6;
-  --dim: #8a8a8a;
-  --border: rgba(167, 255, 0, 0.35);
+  --bg: #faf9f6;
+  --panel-bg: #ffffff;
+  --primary: #4f8a00;
+  --text: #161611;
+  --dim: #6b6b63;
+  --border: rgba(79, 138, 0, 0.3);
+  --accent-warm: #a3690a;
+  --cta-text: #faf9f6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0a0a0a;
+    --panel-bg: #141414;
+    --primary: #a7ff00;
+    --text: #e6e6e6;
+    --dim: #8a8a8a;
+    --border: rgba(167, 255, 0, 0.35);
+    --accent-warm: #e0a845;
+    --cta-text: #0a0a0a;
+  }
 }
 
 * {
@@ -13,6 +33,7 @@
 html {
   scroll-behavior: auto;
   background: var(--bg);
+  color-scheme: light dark;
 }
 
 body {
@@ -88,13 +109,41 @@ a {
   padding: 24px;
   max-width: 28rem;
   margin: auto;
-  color: var(--dim);
+  color: #434944;
   background: #eceeed;
+}
+
+/* Blinking "scroll" hint, visible only at the very start of the section —
+   toggled by SkateScene.tsx (opacity), blinking handled here (animation). */
+.scrollPrompt {
+  position: absolute;
+  left: 50%;
+  bottom: 7%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.4s ease;
+  z-index: 2;
+}
+
+.scrollPromptText {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #434944;
+  animation: scrollPromptBlink 1.4s steps(2, jump-none) infinite;
+}
+
+@keyframes scrollPromptBlink {
+  50% {
+    opacity: 0.15;
+  }
 }
 
 /* ── Landing content, after the sticky section releases ── */
 .landing {
-  max-width: 720px;
+  max-width: 1080px;
   margin: 0 auto;
   padding: 64px 24px 96px;
 }
@@ -122,37 +171,56 @@ a {
   max-width: 56ch;
 }
 
-.specGrid {
+/* Product section: image left, info panel right on desktop; stacked on
+   mobile (a side-by-side split doesn't work under ~1024px). */
+.product {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1px;
-  background: var(--border);
-  border: 1px solid var(--border);
-  margin-bottom: 48px;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  align-items: start;
+  margin-bottom: 56px;
 }
 
-.specCell {
-  background: var(--bg);
+.productImage {
+  background: #eceeed;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 16px;
 }
 
-.specLabel {
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--dim);
-  margin-bottom: 4px;
+.productImage img {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  display: block;
 }
 
-.specValue {
+.specList {
+  list-style: none;
+  margin: 0 0 32px;
+  padding: 0;
+}
+
+.specList li {
+  position: relative;
+  padding: 10px 0 10px 20px;
   font-size: 15px;
+  line-height: 1.5;
   color: var(--text);
+}
+
+.specList li::before {
+  content: "–";
+  position: absolute;
+  left: 0;
+  color: var(--primary);
 }
 
 .ctaBox {
   border: 1px solid var(--border);
   padding: 24px;
-  margin-bottom: 56px;
 }
 
 .ctaTitle {
@@ -172,7 +240,7 @@ a {
 .ctaButton {
   display: inline-block;
   background: var(--primary);
-  color: #0a0a0a;
+  color: var(--cta-text);
   font-family: var(--font-mono), monospace;
   font-weight: 700;
   font-size: 13px;
@@ -188,32 +256,87 @@ a {
   opacity: 0.85;
 }
 
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding-top: 24px;
-  border-top: 1px solid var(--border);
-  font-size: 12px;
-  color: var(--dim);
+@media (min-width: 1024px) {
+  .product {
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+  }
+
+  .productImage {
+    /* Shape shifts left, sits full-height beside the text panel. */
+    align-self: stretch;
+  }
+
+  .productImage img {
+    max-width: 100%;
+  }
 }
 
-.footer a {
-  color: var(--dim);
-  text-decoration: none;
+/* ── Speech bubble ── */
+.speech {
+  max-width: 480px;
+  margin: 0 auto 96px;
+  padding: 0 24px;
+  text-align: center;
 }
 
-.footer a:hover {
-  color: var(--primary);
+.speechBubble {
+  position: relative;
+  background: var(--panel-bg);
+  border: 1px solid var(--accent-warm);
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.speechBubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  transform: translateX(-50%) rotate(45deg);
+  width: 16px;
+  height: 16px;
+  background: var(--panel-bg);
+  border-right: 1px solid var(--accent-warm);
+  border-bottom: 1px solid var(--accent-warm);
+}
+
+.speechName {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+  margin: 0 0 8px;
+}
+
+.speechText {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
+  margin: 0;
+}
+
+.speechAvatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto;
+  border: 1px solid var(--border);
+  background: var(--panel-bg);
+}
+
+.speechAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 @media (max-width: 640px) {
   .headline {
     font-size: 42px;
-  }
-  .specGrid {
-    grid-template-columns: 1fr;
   }
 }
