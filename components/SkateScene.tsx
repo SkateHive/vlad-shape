@@ -30,11 +30,30 @@ async function loadKit() {
   return { T, createSkateboard, loadSkateArtwork, createCinematicMotion };
 }
 
+const SPECS: string[] = [
+  "Six-ply maple deck — 810 × 209.55 × 9.17 mm",
+  "Concave, rounded edges, asymmetric kicks",
+  "Logo: 32 mm, centered between the rear bolts",
+  "Trucks: cast silver, 61.5 × 77.5 mm, 15° kingpin",
+  "Wheels: 54 × 32 mm urethane",
+  "Bearings: eight 608s, with spacers",
+];
+
+// Fraction of the total scroll track spent on the (unmodified) disassembly/
+// reassembly cinematic — the rest drives the pan + panel/speech-bubble
+// reveal below. Keeps the disassembly's own timing (in scroll distance)
+// identical to before; the reveal is purely additional track appended after.
+const DISASSEMBLY_VH = 660;
+const REVEAL_VH = 280;
+const DISASSEMBLY_FRACTION = DISASSEMBLY_VH / (DISASSEMBLY_VH + REVEAL_VH);
+
 export default function SkateScene() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const promptRef = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const speechRef = useRef<HTMLDivElement | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
 
   useEffect(() => {
@@ -269,12 +288,17 @@ export default function SkateScene() {
       let motion: any = null;
       let artworkTextures: any = null;
 
+      let panAmount = 0;
       let ro: ResizeObserver | null = null;
       const resize = () => {
         const r = stage.getBoundingClientRect();
         renderer.setSize(r.width, r.height, false);
         camera.aspect = r.width / Math.max(1, r.height);
         camera.updateProjectionMatrix();
+        // Only pan the deck left to make room for the side panel on desktop —
+        // on narrow screens there's no room for a side-by-side layout, so the
+        // panel/speech bubble overlay centered instead (see globals.css).
+        panAmount = r.width >= 768 ? 1.9 : 0;
         targetProgress = readProgress();
         wake(true);
       };
@@ -347,10 +371,33 @@ export default function SkateScene() {
         zoomActual += (zoom - zoomActual) * damping;
         tilt += (-1.08 - tilt) * damping;
 
-        motion.update(progress, { tilt, pitch, yaw, zoom: zoomActual, reducedMotion: reduced });
+        // progress (0-1) spans the WHOLE track (disassembly + reveal). Map it
+        // back down to the disassembly cinematic's own 0-1 range — unchanged
+        // choreography, just fed a clamped sub-range instead of the raw value
+        // — then derive how far into the reveal (pan + panel/speech) we are.
+        const discProgress = clamp(progress / DISASSEMBLY_FRACTION, 0, 1);
+        const revealRaw = clamp((progress - DISASSEMBLY_FRACTION) / (1 - DISASSEMBLY_FRACTION), 0, 1);
+        const revealProgress = revealRaw * revealRaw * (3 - 2 * revealRaw); // smoothstep
+
+        motion.update(discProgress, { tilt, pitch, yaw, zoom: zoomActual, reducedMotion: reduced });
+        if (model?.root) model.root.position.x = -panAmount * revealProgress;
         renderer.render(scene, camera);
         setFinished(progress === 1 && targetProgress === 1);
         if (promptRef.current) promptRef.current.style.opacity = progress < 0.02 ? "1" : "0";
+
+        if (panelRef.current) {
+          const p = clamp(revealProgress / 0.55, 0, 1);
+          panelRef.current.style.opacity = String(p);
+          panelRef.current.style.transform = `translateY(${(1 - p) * 16}px)`;
+          panelRef.current.style.pointerEvents = p > 0.5 ? "auto" : "none";
+        }
+        if (speechRef.current) {
+          const p = clamp((revealProgress - 0.5) / 0.5, 0, 1);
+          speechRef.current.style.opacity = String(p);
+          speechRef.current.style.transform = `translateY(${(1 - p) * 16}px)`;
+          speechRef.current.style.pointerEvents = p > 0.5 ? "auto" : "none";
+        }
+
         if (!finished) frame = requestAnimationFrame(animate);
       }
       wake = (force = false) => {
@@ -415,6 +462,52 @@ export default function SkateScene() {
         {!failure && (
           <div ref={promptRef} className="scrollPrompt" aria-hidden="true">
             <span className="scrollPromptText">Scroll ↓</span>
+          </div>
+        )}
+
+        {!failure && (
+          <div ref={panelRef} className="stagePanel">
+            <p className="eyebrow">Skatehive Pro Shape</p>
+            <h1 className="headline pixel">VLAD</h1>
+            <p className="lede">
+              Six-ply maple, cast trucks, the full hardware stack — no
+              shortcuts. Built by the Skatehive crew, for the crew.
+            </p>
+            <ul className="specList">
+              {SPECS.map((spec) => (
+                <li key={spec}>{spec}</li>
+              ))}
+            </ul>
+            <div className="ctaBox">
+              <h2 className="ctaTitle pixel">Get one</h2>
+              <p className="ctaText">
+                Limited run. Hit the Discord to ask about availability,
+                sizing and drop dates.
+              </p>
+              <a
+                className="ctaButton"
+                href="https://discord.gg/skatehive"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Ask in Discord →
+              </a>
+            </div>
+          </div>
+        )}
+
+        {!failure && (
+          <div ref={speechRef} className="stageSpeech">
+            <div className="speechBubble">
+              <p className="speechName">Vlad</p>
+              <p className="speechText">
+                If you stake with me, you can always ask a puff of my joints.
+              </p>
+            </div>
+            <div className="speechAvatar">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/vlad-head.png" alt="Vlad" width={140} height={140} />
+            </div>
           </div>
         )}
       </div>

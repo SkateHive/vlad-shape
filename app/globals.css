@@ -56,13 +56,16 @@ a {
   color: inherit;
 }
 
-/* ── Skateboard scroll section — sizing/behavior per the kit spec.
-   Do not change these: the section-local progress math in SkateScene.tsx
-   assumes exactly this containment relationship. ── */
+/* ── Skateboard scroll section. The containment relationship (sticky 100vh
+   stage inside a taller section) is per the kit spec — do not change that.
+   The total height IS ours to extend: 660vh plays the kit's own disassembly/
+   reassembly cinematic unmodified, then an added 280vh drives the pan +
+   product-panel/speech-bubble reveal within the same sticky canvas (see
+   DISASSEMBLY_VH/REVEAL_VH in SkateScene.tsx — keep these two in sync). ── */
 .skateScroll {
   position: relative;
-  height: 660vh;
-  height: 660svh;
+  height: 940vh;
+  height: 940svh;
 }
 
 .skateStage {
@@ -141,73 +144,52 @@ a {
   }
 }
 
-/* ── Landing content, after the sticky section releases ── */
-.landing {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 64px 24px 96px;
+/* ── In-canvas overlays: product panel + speech bubble, both live INSIDE
+   .skateStage on top of the WebGL canvas. Opacity/transform are set every
+   frame from SkateScene.tsx (tied to scroll progress), not CSS transitions
+   — anything time-based here would drift out of sync with the scroll. ── */
+.stagePanel,
+.stageSpeech {
+  position: absolute;
+  z-index: 3;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .eyebrow {
-  font-size: 12px;
-  letter-spacing: 0.18em;
+  font-size: 11px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--primary);
   opacity: 0.85;
 }
 
 .headline {
-  font-size: 64px;
+  font-size: 36px;
   line-height: 0.95;
-  margin: 12px 0 20px;
+  margin: 6px 0 8px;
   color: var(--primary);
 }
 
 .lede {
-  font-size: 16px;
-  line-height: 1.6;
+  font-size: 13px;
+  line-height: 1.45;
   color: var(--text);
-  margin-bottom: 40px;
-  max-width: 56ch;
-}
-
-/* Product section: image left, info panel right on desktop; stacked on
-   mobile (a side-by-side split doesn't work under ~1024px). */
-.product {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 40px;
-  align-items: start;
-  margin-bottom: 56px;
-}
-
-.productImage {
-  background: #eceeed;
-  border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-
-.productImage img {
-  width: 100%;
-  max-width: 340px;
-  height: auto;
-  display: block;
+  margin-bottom: 12px;
+  max-width: 42ch;
 }
 
 .specList {
   list-style: none;
-  margin: 0 0 32px;
+  margin: 0 0 12px;
   padding: 0;
 }
 
 .specList li {
   position: relative;
-  padding: 10px 0 10px 20px;
-  font-size: 15px;
-  line-height: 1.5;
+  padding: 4px 0 4px 18px;
+  font-size: 12px;
+  line-height: 1.35;
   color: var(--text);
 }
 
@@ -220,21 +202,21 @@ a {
 
 .ctaBox {
   border: 1px solid var(--border);
-  padding: 24px;
+  padding: 12px 14px;
 }
 
 .ctaTitle {
-  font-size: 28px;
+  font-size: 17px;
   color: var(--primary);
-  margin: 0 0 8px;
+  margin: 0 0 3px;
 }
 
 .ctaText {
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 11.5px;
+  line-height: 1.4;
   color: var(--dim);
-  margin: 0 0 20px;
-  max-width: 52ch;
+  margin: 0 0 10px;
+  max-width: 42ch;
 }
 
 .ctaButton {
@@ -243,11 +225,11 @@ a {
   color: var(--cta-text);
   font-family: var(--font-mono), monospace;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   text-decoration: none;
-  padding: 14px 24px;
+  padding: 11px 18px;
   border: 1px solid var(--primary);
   transition: opacity 0.15s;
 }
@@ -256,75 +238,50 @@ a {
   opacity: 0.85;
 }
 
-@media (min-width: 1024px) {
-  .product {
-    grid-template-columns: 1fr 1fr;
-    gap: 64px;
-  }
-
-  .productImage {
-    /* Shape shifts left, sits full-height beside the text panel. */
-    align-self: stretch;
-  }
-
-  .productImage img {
-    max-width: 100%;
-  }
-}
-
-/* ── Speech bubble ── */
-.speech {
-  max-width: 480px;
-  margin: 0 auto 96px;
-  padding: 0 24px;
-  text-align: center;
-}
-
 .speechBubble {
   position: relative;
   background: var(--panel-bg);
   border: 1px solid var(--accent-warm);
-  border-radius: 16px;
-  padding: 20px 24px;
-  margin-bottom: 24px;
-  text-align: left;
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
 }
 
 .speechBubble::after {
   content: "";
   position: absolute;
-  left: 50%;
-  bottom: -9px;
-  transform: translateX(-50%) rotate(45deg);
-  width: 16px;
-  height: 16px;
+  left: 32px;
+  bottom: -8px;
+  transform: rotate(45deg);
+  width: 14px;
+  height: 14px;
   background: var(--panel-bg);
   border-right: 1px solid var(--accent-warm);
   border-bottom: 1px solid var(--accent-warm);
 }
 
 .speechName {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--accent-warm);
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 
 .speechText {
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: 13.5px;
+  line-height: 1.45;
   color: var(--text);
   margin: 0;
 }
 
 .speechAvatar {
-  width: 140px;
-  height: 140px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   overflow: hidden;
-  margin: 0 auto;
+  margin-left: 24px;
   border: 1px solid var(--border);
   background: var(--panel-bg);
 }
@@ -335,8 +292,65 @@ a {
   object-fit: cover;
 }
 
+/* Mobile/narrow: no room to pan the deck aside, so both overlays sit
+   bottom-anchored, full width, scrollable if content runs long. */
+.stagePanel {
+  left: 4%;
+  right: 4%;
+  bottom: 4%;
+  max-height: 62svh;
+  overflow-y: auto;
+  padding: 14px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+}
+
+.stageSpeech {
+  left: 4%;
+  right: 4%;
+  top: 4%;
+}
+
+@media (min-width: 768px) {
+  /* Deck pans left (see SkateScene.tsx panAmount) — panel/speech share the
+     right-hand column it opens up, sitting directly on the canvas. The
+     canvas background is a fixed light studio gray regardless of site
+     theme (preserved from the kit spec — see SkateScene.tsx), so these two
+     override --text/--dim/--border to stay legible on it even in dark
+     mode, instead of inheriting the page's (here, too-light) tokens. */
+  .stagePanel,
+  .stageSpeech {
+    --text: #161611;
+    --dim: #52524a;
+    --border: rgba(22, 22, 17, 0.22);
+    --panel-bg: #ffffff;
+  }
+
+  .stagePanel {
+    left: auto;
+    right: 6%;
+    top: 5%;
+    bottom: auto;
+    width: min(380px, 34vw);
+    max-height: 68svh;
+    background: transparent;
+    backdrop-filter: none;
+    border: none;
+    padding: 0;
+  }
+
+  .stageSpeech {
+    left: auto;
+    right: 6%;
+    top: auto;
+    bottom: 8%;
+    width: min(340px, 30vw);
+  }
+}
+
 @media (max-width: 640px) {
   .headline {
-    font-size: 42px;
+    font-size: 32px;
   }
 }
