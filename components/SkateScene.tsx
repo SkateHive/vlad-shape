@@ -37,13 +37,43 @@ const SPECS: string[] = [
   "Available in sizes 8.0, 8.25 and 8.5",
 ];
 
+// IANA "America/<city>" segments that are Brazilian timezones — used only to
+// pick a display currency, never sent anywhere or used for anything else.
+const BRAZIL_TIMEZONE_CITIES = new Set([
+  "Sao_Paulo",
+  "Bahia",
+  "Fortaleza",
+  "Recife",
+  "Araguaina",
+  "Maceio",
+  "Belem",
+  "Manaus",
+  "Cuiaba",
+  "Campo_Grande",
+  "Porto_Velho",
+  "Boa_Vista",
+  "Rio_Branco",
+  "Noronha",
+]);
+
+const PRICE_BRL = "R$ 349.90";
+const INSTALLMENT_BRL = "R$ 58.31";
+const PRICE_USD = "$67.99";
+const INSTALLMENT_USD = "$11.33";
+
 // Fraction of the total scroll track spent on the (unmodified) disassembly/
 // reassembly cinematic — the rest drives the pan + panel/speech-bubble
-// reveal below. Keeps the disassembly's own timing (in scroll distance)
-// identical to before; the reveal is purely additional track appended after.
-const DISASSEMBLY_VH = 660;
-const REVEAL_VH = 280;
-const DISASSEMBLY_FRACTION = DISASSEMBLY_VH / (DISASSEMBLY_VH + REVEAL_VH);
+// reveal below. The cinematic's pacing is entirely relative (fed a 0-1
+// range), so shortening these doesn't change how the animation looks or
+// feels, only how many physical pixels of scrolling it takes to get
+// through it — which is why mobile (no pan, no side-by-side payoff for
+// the extra reveal track, and users scroll less per swipe) gets a shorter
+// total than desktop. Must match .skateScroll's height in globals.css at
+// the same 768px breakpoint.
+const DISASSEMBLY_VH_DESKTOP = 660;
+const REVEAL_VH_DESKTOP = 280;
+const DISASSEMBLY_VH_MOBILE = 420;
+const REVEAL_VH_MOBILE = 140;
 
 export default function SkateScene() {
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -53,6 +83,23 @@ export default function SkateScene() {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const speechRef = useRef<HTMLDivElement | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
+  // Default USD (smaller-looking number); switch to BRL only when we can
+  // reasonably tell the visitor is in Brazil — via timezone/locale, which
+  // are plain JS properties (no geolocation permission prompt). Not
+  // precise (VPNs, travelers), but that's an acceptable tradeoff for a
+  // price display, and it's strictly better than always guessing wrong.
+  const [currency, setCurrency] = useState<"USD" | "BRL">("USD");
+
+  useEffect(() => {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      const lang = (navigator.language || "").toLowerCase();
+      const isBrazilTz = tz.startsWith("America/") && BRAZIL_TIMEZONE_CITIES.has(tz.slice("America/".length));
+      if (isBrazilTz || lang.startsWith("pt-br")) setCurrency("BRL");
+    } catch {
+      // Intl/navigator unavailable for some reason — keep the USD default.
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -292,6 +339,7 @@ export default function SkateScene() {
       let artworkTextures: any = null;
 
       let panAmount = 0;
+      let disassemblyFraction = DISASSEMBLY_VH_DESKTOP / (DISASSEMBLY_VH_DESKTOP + REVEAL_VH_DESKTOP);
       let ro: ResizeObserver | null = null;
       const resize = () => {
         const r = stage.getBoundingClientRect();
@@ -301,7 +349,13 @@ export default function SkateScene() {
         // Only pan the deck left to make room for the side panel on desktop —
         // on narrow screens there's no room for a side-by-side layout, so the
         // panel/speech bubble overlay centered instead (see globals.css).
-        panAmount = r.width >= 768 ? 1.9 : 0;
+        // Same breakpoint picks the matching (shorter, on mobile) scroll
+        // track — .skateScroll's height in globals.css must track this.
+        const isDesktop = r.width >= 768;
+        panAmount = isDesktop ? 1.9 : 0;
+        disassemblyFraction = isDesktop
+          ? DISASSEMBLY_VH_DESKTOP / (DISASSEMBLY_VH_DESKTOP + REVEAL_VH_DESKTOP)
+          : DISASSEMBLY_VH_MOBILE / (DISASSEMBLY_VH_MOBILE + REVEAL_VH_MOBILE);
         targetProgress = readProgress();
         wake(true);
       };
@@ -378,8 +432,8 @@ export default function SkateScene() {
         // back down to the disassembly cinematic's own 0-1 range — unchanged
         // choreography, just fed a clamped sub-range instead of the raw value
         // — then derive how far into the reveal (pan + panel/speech) we are.
-        const discProgress = clamp(progress / DISASSEMBLY_FRACTION, 0, 1);
-        const revealRaw = clamp((progress - DISASSEMBLY_FRACTION) / (1 - DISASSEMBLY_FRACTION), 0, 1);
+        const discProgress = clamp(progress / disassemblyFraction, 0, 1);
+        const revealRaw = clamp((progress - disassemblyFraction) / (1 - disassemblyFraction), 0, 1);
         const revealProgress = revealRaw * revealRaw * (3 - 2 * revealRaw); // smoothstep
 
         motion.update(discProgress, { tilt, pitch, yaw, zoom: zoomActual, reducedMotion: reduced });
@@ -469,40 +523,48 @@ export default function SkateScene() {
         )}
 
         {!failure && (
-          <div ref={panelRef} className="stagePanel">
-            <p className="eyebrow">SoMa</p>
-            <h1 className="headline pixel headlineLong">Shape SoMa Leo.MKV Server</h1>
-            <div className="priceBlock">
-              <p className="priceNow">R$ 349.90</p>
-              <p className="priceInstallments">
-                or 6x of <span className="priceHighlight">R$ 58.31</span> interest-free
-              </p>
+          // Grouped only so mobile can stack speech-bubble + avatar directly
+          // on top of the panel with no gap between them (see .stageBottomGroup
+          // in globals.css) — on desktop the group is a no-op (display:contents)
+          // and each child keeps its own independent absolute position.
+          <div className="stageBottomGroup">
+            <div ref={speechRef} className="stageSpeech">
+              <div className="speechBubble">
+                <p className="speechName">Vlad</p>
+                <p className="speechText">If you buy my board you can puff my joints.</p>
+              </div>
+              <div className="speechAvatar">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/vlad-head.png" alt="Vlad" width={460} height={520} />
+              </div>
             </div>
-            <a
-              className="ctaButton"
-              href="https://somaskatearte.com/products/shape-soma-leo-mkv"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Buy now →
-            </a>
-            <ul className="specList">
-              {SPECS.map((spec) => (
-                <li key={spec}>{spec}</li>
-              ))}
-            </ul>
-          </div>
-        )}
 
-        {!failure && (
-          <div ref={speechRef} className="stageSpeech">
-            <div className="speechBubble">
-              <p className="speechName">Vlad</p>
-              <p className="speechText">If you buy my board you can puff my joints.</p>
-            </div>
-            <div className="speechAvatar">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/vlad-head.png" alt="Vlad" width={140} height={140} />
+            <div ref={panelRef} className="stagePanel">
+              <p className="eyebrow">SoMa</p>
+              <h1 className="headline pixel headlineLong">Shape SoMa Leo.MKV Server</h1>
+              <div className="priceBlock">
+                <p className="priceNow">{currency === "USD" ? PRICE_USD : PRICE_BRL}</p>
+                <p className="priceInstallments">
+                  or 6x of{" "}
+                  <span className="priceHighlight">
+                    {currency === "USD" ? INSTALLMENT_USD : INSTALLMENT_BRL}
+                  </span>{" "}
+                  interest-free
+                </p>
+              </div>
+              <a
+                className="ctaButton"
+                href="https://somaskatearte.com/products/shape-soma-leo-mkv"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Buy now →
+              </a>
+              <ul className="specList">
+                {SPECS.map((spec) => (
+                  <li key={spec}>{spec}</li>
+                ))}
+              </ul>
             </div>
           </div>
         )}

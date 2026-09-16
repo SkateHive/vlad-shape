@@ -68,6 +68,16 @@ a {
   height: 940svh;
 }
 
+@media (max-width: 767px) {
+  /* Shorter track on mobile: no pan/side-panel payoff for the reveal
+     phase there, and users scroll less per swipe — must match
+     DISASSEMBLY_VH_MOBILE + REVEAL_VH_MOBILE in SkateScene.tsx. */
+  .skateScroll {
+    height: 560vh;
+    height: 560svh;
+  }
+}
+
 .skateStage {
   position: sticky;
   top: 0;
@@ -154,6 +164,14 @@ a {
   z-index: 3;
   opacity: 0;
   pointer-events: none;
+}
+
+/* Pure grouping wrapper — a no-op on desktop (each child keeps its own
+   absolute position), given real layout only on mobile (see the
+   max-width:767px block at the end of this file) so the avatar can sit
+   directly on top of the panel with no gap. */
+.stageBottomGroup {
+  display: contents;
 }
 
 .eyebrow {
@@ -300,16 +318,20 @@ a {
   margin: 0;
 }
 
+/* Width-driven, height auto (not a fixed square box) — a fixed box +
+   object-fit:contain was letterboxing the image inside it, leaving empty
+   space below the chest instead of the character running flush to the
+   bottom of its container. */
 .speechAvatar {
-  width: 200px;
-  height: 200px;
+  width: 220px;
   margin-left: 24px;
+  display: block;
 }
 
 .speechAvatar img {
+  display: block;
   width: 100%;
-  height: 100%;
-  object-fit: contain;
+  height: auto;
 }
 
 /* Mobile/narrow: no room to pan the deck aside, so both overlays sit
@@ -373,7 +395,7 @@ a {
     left: auto;
     right: 6%;
     top: auto;
-    bottom: 2%;
+    bottom: 0;
     width: min(340px, 30vw);
   }
 }
@@ -381,5 +403,61 @@ a {
 @media (max-width: 640px) {
   .headline {
     font-size: 32px;
+  }
+}
+
+/* Mobile bottom stack: speech bubble + avatar sitting directly on top of
+   the panel, touching it (no gap), all anchored together as one unit.
+   Placed last in the file so it wins the cascade over the earlier
+   .stagePanel/.stageSpeech base rules (same specificity, later wins). */
+@media (max-width: 767px) {
+  .stageBottomGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    position: absolute;
+    z-index: 3;
+    left: 4%;
+    right: 4%;
+    bottom: 4%;
+  }
+
+  .stagePanel,
+  .stageSpeech {
+    position: static;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    width: auto;
+  }
+
+  .stagePanel {
+    max-height: 46svh;
+  }
+
+  .stageSpeech {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .stageSpeech .speechBubble {
+    align-self: stretch;
+    margin-bottom: 8px;
+  }
+
+  .stageSpeech .speechBubble::after {
+    left: 50%;
+    margin-left: -7px;
+  }
+
+  /* No margin below the avatar — its bottom edge touches the panel's top
+     edge directly, per the request to have the character "touch" the box. */
+  .stageSpeech .speechAvatar {
+    width: 55%;
+    max-width: 260px;
+    margin: 4px auto 0;
   }
 }

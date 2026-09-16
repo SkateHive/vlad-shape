@@ -16,6 +16,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://vlad.skatehive.app"),
   title: "Vlad — Skatehive Pro Shape",
   description:
     "A six-ply maple deck, cast trucks and the full hardware stack — built by Skatehive. Scroll to see it come apart.",
@@ -26,6 +27,14 @@ export const metadata: Metadata = {
     url: "https://vlad.skatehive.app",
     siteName: "Skatehive",
     type: "website",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Vlad — Skatehive Pro Shape",
+    description:
+      "A six-ply maple deck, cast trucks and the full hardware stack — built by Skatehive.",
+    images: ["/og-image.png"],
   },
 };
 
