@@ -31,12 +31,10 @@ async function loadKit() {
 }
 
 const SPECS: string[] = [
-  "Six-ply maple deck — 810 × 209.55 × 9.17 mm",
-  "Concave, rounded edges, asymmetric kicks",
-  "Logo: 32 mm, centered between the rear bolts",
-  "Trucks: cast silver, 61.5 × 77.5 mm, 15° kingpin",
-  "Wheels: 54 × 32 mm urethane",
-  "Bearings: eight 608s, with spacers",
+  "Premium Canadian maple shape",
+  "Manufactured in Mexico",
+  "Silkscreened in Brazil",
+  "Available in sizes 8.0, 8.25 and 8.5",
 ];
 
 // Fraction of the total scroll track spent on the (unmodified) disassembly/
@@ -472,32 +470,27 @@ export default function SkateScene() {
 
         {!failure && (
           <div ref={panelRef} className="stagePanel">
-            <p className="eyebrow">Skatehive Pro Shape</p>
-            <h1 className="headline pixel">VLAD</h1>
-            <p className="lede">
-              Six-ply maple, cast trucks, the full hardware stack — no
-              shortcuts. Built by the Skatehive crew, for the crew.
-            </p>
+            <p className="eyebrow">SoMa</p>
+            <h1 className="headline pixel headlineLong">Shape SoMa Leo.MKV Server</h1>
+            <div className="priceBlock">
+              <p className="priceNow">R$ 349.90</p>
+              <p className="priceInstallments">
+                or 6x of <span className="priceHighlight">R$ 58.31</span> interest-free
+              </p>
+            </div>
+            <a
+              className="ctaButton"
+              href="https://somaskatearte.com/products/shape-soma-leo-mkv"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Buy now →
+            </a>
             <ul className="specList">
               {SPECS.map((spec) => (
                 <li key={spec}>{spec}</li>
               ))}
             </ul>
-            <div className="ctaBox">
-              <h2 className="ctaTitle pixel">Get one</h2>
-              <p className="ctaText">
-                Limited run. Hit the Discord to ask about availability,
-                sizing and drop dates.
-              </p>
-              <a
-                className="ctaButton"
-                href="https://discord.gg/skatehive"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Ask in Discord →
-              </a>
-            </div>
           </div>
         )}
 
@@ -505,10 +498,7 @@ export default function SkateScene() {
           <div ref={speechRef} className="stageSpeech">
             <div className="speechBubble">
               <p className="speechName">Vlad</p>
-              <p className="speechText">
-                If you buy my board you can puff my joints and make my head
-                bigger.
-              </p>
+              <p className="speechText">If you buy my board you can puff my joints.</p>
             </div>
             <div className="speechAvatar">
               {/* eslint-disable-next-line @next/next/no-img-element */}
