@@ -303,17 +303,13 @@ a {
 .speechAvatar {
   width: 200px;
   height: 200px;
-  border-radius: 50%;
-  overflow: hidden;
   margin-left: 24px;
-  border: 1px solid var(--border);
-  background: var(--panel-bg);
 }
 
 .speechAvatar img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 /* Mobile/narrow: no room to pan the deck aside, so both overlays sit
