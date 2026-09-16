@@ -112,8 +112,8 @@ a {
   padding: 24px;
   max-width: 28rem;
   margin: auto;
-  color: #434944;
-  background: #eceeed;
+  color: #b8b8b0;
+  background: #0a0a0a;
 }
 
 /* Blinking "scroll" hint, visible only at the very start of the section —
@@ -134,7 +134,7 @@ a {
   font-size: 12px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: #434944;
+  color: #b8b8b0;
   animation: scrollPromptBlink 1.4s steps(2, jump-none) infinite;
 }
 
@@ -315,16 +315,23 @@ a {
 @media (min-width: 768px) {
   /* Deck pans left (see SkateScene.tsx panAmount) — panel/speech share the
      right-hand column it opens up, sitting directly on the canvas. The
-     canvas background is a fixed light studio gray regardless of site
-     theme (preserved from the kit spec — see SkateScene.tsx), so these two
-     override --text/--dim/--border to stay legible on it even in dark
-     mode, instead of inheriting the page's (here, too-light) tokens. */
+     canvas background is a fixed near-black regardless of site theme (see
+     scene.background in SkateScene.tsx), so these two override
+     --text/--dim/--border/--panel-bg to stay legible on it even in light
+     mode, instead of inheriting the page's (here, too-dark-on-dark or
+     too-light-on-dark) tokens. */
   .stagePanel,
   .stageSpeech {
-    --text: #161611;
-    --dim: #52524a;
-    --border: rgba(22, 22, 17, 0.22);
-    --panel-bg: #ffffff;
+    --text: #f0f0ec;
+    --dim: #9a9a92;
+    --border: rgba(240, 240, 236, 0.22);
+    --panel-bg: #141414;
+    /* --primary (light mode's dark green) and --accent-warm (light mode's
+       darker gold) are tuned for a light backdrop — force the dark-mode
+       values here too, same reasoning as above. */
+    --primary: #a7ff00;
+    --accent-warm: #e0a845;
+    --cta-text: #0a0a0a;
   }
 
   .stagePanel {

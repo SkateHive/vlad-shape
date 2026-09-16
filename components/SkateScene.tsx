@@ -262,7 +262,12 @@ export default function SkateScene() {
       renderer.shadowMap.type = T.PCFSoftShadowMap;
 
       const scene = new T.Scene();
-      scene.background = new T.Color(0xeceeed);
+      // Visible backdrop only — independent of scene.environment below,
+      // which is a separate baked reflection map built by environment()
+      // from its own light studio scene. Changing this doesn't touch that,
+      // so the metal parts keep the exact same specular reflections the
+      // kit was tuned for.
+      scene.background = new T.Color(0x0a0a0a);
       const envTexture = environment(renderer);
       scene.environment = envTexture;
       const camera = new T.PerspectiveCamera(37, 1, 0.1, 100);
@@ -501,7 +506,8 @@ export default function SkateScene() {
             <div className="speechBubble">
               <p className="speechName">Vlad</p>
               <p className="speechText">
-                If you stake with me, you can always ask a puff of my joints.
+                If you buy my board you can puff my joints and make my head
+                bigger.
               </p>
             </div>
             <div className="speechAvatar">
