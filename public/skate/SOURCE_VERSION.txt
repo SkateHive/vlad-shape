@@ -1,0 +1,8 @@
+Skatehive Three.js source revision
+4b16b0c53ca62eedfd60decda55834decbdd2262
+Cinematic scroll burst: 42 component groups with foreground wheel flybys
+Ending: all components exit; upright red deck holds still; sticky section releases normal page flow
+Deck: six plies, 9.1714285714 mm
+Baseplates: 61.5 x 77.5 mm nominal
+Kingpin: 15 degrees from deck normal
+Griptape: 1024 x 4096 color and height/roughness maps
