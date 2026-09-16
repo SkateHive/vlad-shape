@@ -318,6 +318,20 @@ a {
   margin: 0;
 }
 
+.speechLink {
+  color: var(--accent-warm);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.typingCaret {
+  display: inline-block;
+  margin-left: 1px;
+  color: var(--accent-warm);
+  animation: scrollPromptBlink 0.9s steps(2, jump-none) infinite;
+}
+
 /* Width-driven, height auto (not a fixed square box) — a fixed box +
    object-fit:contain was letterboxing the image inside it, leaving empty
    space below the chest instead of the character running flush to the

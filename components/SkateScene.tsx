@@ -37,6 +37,38 @@ const SPECS: string[] = [
   "Available in sizes 8.0, 8.25 and 8.5",
 ];
 
+const SPEECH_TEXT =
+  "If you buy my board you can puff my joints. If you need money for it use skatehive.app.";
+const SPEECH_LINK_TEXT = "skatehive.app";
+const SPEECH_LINK_URL = "https://skatehive.app";
+const SPEECH_LINK_START = SPEECH_TEXT.indexOf(SPEECH_LINK_TEXT);
+const SPEECH_LINK_END = SPEECH_LINK_START + SPEECH_LINK_TEXT.length;
+
+// Types the sentence out character by character; once the "skatehive.app"
+// span has fully typed, swap it in as a real link instead of plain text.
+function renderTypedSpeech(count: number) {
+  const shown = SPEECH_TEXT.slice(0, count);
+  if (count <= SPEECH_LINK_START) return shown;
+  const before = SPEECH_TEXT.slice(0, SPEECH_LINK_START);
+  if (count < SPEECH_LINK_END) {
+    return (
+      <>
+        {before}
+        {shown.slice(SPEECH_LINK_START)}
+      </>
+    );
+  }
+  return (
+    <>
+      {before}
+      <a href={SPEECH_LINK_URL} target="_blank" rel="noopener noreferrer" className="speechLink">
+        {SPEECH_LINK_TEXT}
+      </a>
+      {shown.slice(SPEECH_LINK_END)}
+    </>
+  );
+}
+
 // IANA "America/<city>" segments that are Brazilian timezones — used only to
 // pick a display currency, never sent anywhere or used for anything else.
 const BRAZIL_TIMEZONE_CITIES = new Set([
@@ -100,6 +132,34 @@ export default function SkateScene() {
       // Intl/navigator unavailable for some reason — keep the USD default.
     }
   }, []);
+
+  // Typewriter effect for the speech bubble — starts once triggered by the
+  // scroll-driven reveal (see the speechRef block in animate() below), not
+  // on mount, so it plays as the bubble comes into view instead of finishing
+  // long before the user scrolls that far.
+  const [typedCount, setTypedCount] = useState(0);
+  const typingStartedRef = useRef(false);
+  const typingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
+    };
+  }, []);
+
+  function startTyping() {
+    if (typingStartedRef.current) return;
+    typingStartedRef.current = true;
+    let i = 0;
+    typingIntervalRef.current = setInterval(() => {
+      i += 1;
+      setTypedCount(i);
+      if (i >= SPEECH_TEXT.length && typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current);
+        typingIntervalRef.current = null;
+      }
+    }, 28);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -453,6 +513,7 @@ export default function SkateScene() {
           speechRef.current.style.opacity = String(p);
           speechRef.current.style.transform = `translateY(${(1 - p) * 16}px)`;
           speechRef.current.style.pointerEvents = p > 0.5 ? "auto" : "none";
+          if (p > 0.15) startTyping();
         }
 
         if (!finished) frame = requestAnimationFrame(animate);
@@ -531,7 +592,14 @@ export default function SkateScene() {
             <div ref={speechRef} className="stageSpeech">
               <div className="speechBubble">
                 <p className="speechName">Vlad</p>
-                <p className="speechText">If you buy my board you can puff my joints.</p>
+                <p className="speechText">
+                  {renderTypedSpeech(typedCount)}
+                  {typedCount < SPEECH_TEXT.length && (
+                    <span className="typingCaret" aria-hidden="true">
+                      ▌
+                    </span>
+                  )}
+                </p>
               </div>
               <div className="speechAvatar">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
